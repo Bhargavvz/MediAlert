@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import AddDonationModal from '../../components/modals/AddDonationModal';
 
 interface Donation {
   id: number;
@@ -26,6 +27,18 @@ interface Donation {
 const Donations: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'available' | 'history'>('available');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleAddDonation = (donation: {
+    donationType: string;
+    date: string;
+    location: string;
+    notes: string;
+    status: string;
+  }) => {
+    // TODO: Implement donation addition logic
+    console.log('New donation:', donation);
+  };
 
   const donations: Donation[] = [
     {
@@ -65,9 +78,9 @@ const Donations: React.FC = () => {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'accepted':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
         return 'bg-green-100 text-green-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -75,24 +88,27 @@ const Donations: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8 space-y-6">
+        {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Medicine Donations</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Donate unused medicines to those in need
+              Donate unused medicines to help those in need
             </p>
           </div>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-5 w-5 mr-2" />
+          <button
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <Plus className="w-5 h-5 mr-2" />
             New Donation
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Heart className="h-6 w-6 text-blue-600" />
@@ -103,7 +119,7 @@ const Donations: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Package className="h-6 w-6 text-green-600" />
@@ -114,7 +130,7 @@ const Donations: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <MapPin className="h-6 w-6 text-purple-600" />
@@ -127,9 +143,9 @@ const Donations: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabs and Search */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <div className="flex space-x-4 border-b border-gray-200">
+        {/* Tabs Section */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('available')}
               className={`pb-4 px-1 border-b-2 font-medium text-sm ${
@@ -150,112 +166,109 @@ const Donations: React.FC = () => {
             >
               Donation History
             </button>
+          </nav>
+        </div>
+
+        {/* Search and Filter Section */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search medicines..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            />
+            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
           </div>
-          <div className="flex items-center space-x-4 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-initial">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Search donations..."
-              />
-            </div>
-            <button className="p-2 text-gray-400 hover:text-gray-500">
-              <Filter className="h-5 w-5" />
-            </button>
-          </div>
+          <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Filter className="w-5 h-5 mr-2 text-gray-400" />
+            Filters
+          </button>
         </div>
 
         {/* Donations List */}
-        <div className="space-y-4">
-          {donations
-            .filter((donation) =>
-              activeTab === 'available'
-                ? donation.status === 'pending'
-                : donation.status !== 'pending'
-            )
-            .map((donation) => (
-              <div
-                key={donation.id}
-                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-blue-500 transition-colors duration-200"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Package className="h-6 w-6 text-blue-600" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="divide-y divide-gray-200">
+            {donations
+              .filter((donation) =>
+                activeTab === 'available'
+                  ? donation.status === 'pending'
+                  : donation.status !== 'pending'
+              )
+              .map((donation) => (
+                <div
+                  key={donation.id}
+                  className="p-6 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {donation.medicineName}
+                        </h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                            donation.status
+                          )}`}
+                        >
+                          {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Package className="w-5 h-5 mr-2 text-gray-400" />
+                          {donation.quantity} units
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="w-5 h-5 mr-2 text-gray-400" />
+                          Expires: {donation.expiryDate}
+                        </div>
+                        <div className="flex items-center">
+                          <MapPin className="w-5 h-5 mr-2 text-gray-400" />
+                          {donation.location}
+                        </div>
+                        <div className="flex items-center">
+                          <Users className="w-5 h-5 mr-2 text-gray-400" />
+                          {donation.organization}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {donation.medicineName}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {donation.quantity} units • Expires {donation.expiryDate}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                      donation.status
-                    )}`}
-                  >
-                    {donation.status}
-                  </span>
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <MapPin className="h-4 w-4" />
-                    <span>{donation.location}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <Users className="h-4 w-4" />
-                    <span>{donation.organization}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <Calendar className="h-4 w-4" />
-                    <span>Donated on {donation.date}</span>
+                    <button className="ml-6 p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
-
-                <div className="mt-4 flex space-x-4">
-                  <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                    View Details
-                  </button>
-                  <button className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                    Track Status
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+          </div>
         </div>
 
         {/* Collection Centers Section */}
-        <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+        <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
           <div className="flex items-start space-x-4">
             <div className="flex-shrink-0">
               <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <MapPin className="h-6 w-6 text-blue-600" />
               </div>
             </div>
-            <div>
-              <h3 className="text-lg font-medium text-blue-900">
-                Find Collection Centers
-              </h3>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-blue-900">Find Collection Centers</h3>
               <p className="mt-1 text-sm text-blue-800">
                 Locate nearby medicine collection centers and drop off your donations.
                 All donations are verified and distributed to those in need.
               </p>
-              <button className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+              <button className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
                 Find Nearest Center
               </button>
             </div>
           </div>
         </div>
       </div>
+      <AddDonationModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddDonation={handleAddDonation}
+      />
     </DashboardLayout>
   );
 };

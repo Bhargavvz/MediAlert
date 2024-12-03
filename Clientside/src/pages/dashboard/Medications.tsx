@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pill, Plus, Search, Filter, MoreVertical, Calendar, Clock, AlertCircle } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import AddMedicationModal from '../../components/modals/AddMedicationModal';
 
 interface Medication {
   id: number;
@@ -68,22 +69,24 @@ const Medications: React.FC = () => {
     }
   };
 
+  const handleAddMedication = (medicationData: any) => {
+    // TODO: Implement API call to save medication
+    console.log('Adding medication:', medicationData);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Medications</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Manage your medications and track your intake
-            </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 w-full sm:w-auto">
+            <h1 className="text-2xl font-semibold text-gray-900">Medications</h1>
+            <p className="mt-1 text-sm text-gray-500">Manage your medications and prescriptions</p>
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-5 w-5" />
             Add Medication
           </button>
         </div>
@@ -98,7 +101,7 @@ const Medications: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm"
               placeholder="Search medications..."
             />
           </div>
@@ -106,21 +109,21 @@ const Medications: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg"
+              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg shadow-sm"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
               <option value="paused">Paused</option>
             </select>
-            <button className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg">
               <Filter className="h-5 w-5" />
             </button>
           </div>
         </div>
 
         {/* Medications List */}
-        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -150,8 +153,8 @@ const Medications: React.FC = () => {
                   <tr key={medication.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Pill className="h-6 w-6 text-blue-600" />
+                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 rounded-lg">
+                          <Pill className="h-5 w-5 text-blue-600" />
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
@@ -162,39 +165,28 @@ const Medications: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{medication.dosage}</div>
-                      <div className="text-sm text-gray-500">
-                        {medication.frequency}
-                      </div>
+                      <div className="text-sm text-gray-500">{medication.frequency}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Calendar className="h-4 w-4 mr-1" />
+                      <div className="text-sm text-gray-900">
                         {medication.startDate} - {medication.endDate}
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {medication.timeOfDay}
-                      </div>
+                      <div className="text-sm text-gray-500">{medication.timeOfDay}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
                           medication.status
                         )}`}
                       >
                         {medication.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="text-sm text-gray-900">{medication.stock} units</div>
-                        {medication.stock < 10 && (
-                          <AlertCircle className="h-4 w-4 text-red-500 ml-1" />
-                        )}
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {medication.stock} units
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-gray-400 hover:text-gray-500">
+                      <button className="text-blue-600 hover:text-blue-900">
                         <MoreVertical className="h-5 w-5" />
                       </button>
                     </td>
@@ -205,6 +197,12 @@ const Medications: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <AddMedicationModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddMedication}
+      />
     </DashboardLayout>
   );
 };

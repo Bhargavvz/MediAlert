@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Bell, Calendar, Check, Clock, Plus, Search, X } from 'lucide-react';
+import { Plus, Search, Filter, Bell, Clock, Calendar, Check, X } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import AddReminderModal from '../../components/modals/AddReminderModal';
 
 interface Reminder {
   id: number;
@@ -15,6 +16,8 @@ interface Reminder {
 const Reminders: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'history'>('today');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const reminders: Reminder[] = [
     {
@@ -70,19 +73,24 @@ const Reminders: React.FC = () => {
     }
   };
 
+  const handleAddReminder = (reminderData: any) => {
+    // TODO: Implement API call to save reminder
+    console.log('Adding reminder:', reminderData);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Reminders</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Track and manage your medication schedule
-            </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 w-full sm:w-auto">
+            <h1 className="text-2xl font-semibold text-gray-900">Reminders</h1>
+            <p className="mt-1 text-sm text-gray-500">Manage your medication reminders and schedules</p>
           </div>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <Plus className="h-5 w-5 mr-2" />
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
+          >
+            <Plus className="h-5 w-5" />
             Add Reminder
           </button>
         </div>
@@ -200,6 +208,12 @@ const Reminders: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <AddReminderModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddReminder}
+      />
     </DashboardLayout>
   );
 };

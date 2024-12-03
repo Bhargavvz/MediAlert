@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Users,
-  Plus,
-  Search,
-  MoreVertical,
-  User,
-  Heart,
-  Bell,
-  Calendar,
-  Shield,
-} from 'lucide-react';
+import { Plus, Search, Filter, User } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import AddFamilyMemberModal from '../../components/modals/AddFamilyMemberModal';
 
 interface FamilyMember {
   id: number;
@@ -24,8 +15,14 @@ interface FamilyMember {
 }
 
 const Family: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  const handleAddFamilyMember = (familyMemberData: any) => {
+    // TODO: Implement API call to save family member
+    console.log('Adding family member:', familyMemberData);
+  };
 
   const familyMembers: FamilyMember[] = [
     {
@@ -76,19 +73,16 @@ const Family: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Family Management</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Manage medications and reminders for your family members
-            </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 w-full sm:w-auto">
+            <h1 className="text-2xl font-semibold text-gray-900">Family Members</h1>
+            <p className="mt-1 text-sm text-gray-500">Manage your family members and caregivers</p>
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-5 w-5" />
             Add Family Member
           </button>
         </div>
@@ -98,7 +92,7 @@ const Family: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
+                <User className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total Members</p>
@@ -109,7 +103,7 @@ const Family: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <Bell className="h-6 w-6 text-purple-600" />
+                <Search className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Active Reminders</p>
@@ -120,7 +114,7 @@ const Family: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <Heart className="h-6 w-6 text-green-600" />
+                <User className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total Medications</p>
@@ -174,32 +168,32 @@ const Family: React.FC = () => {
                     {member.status}
                   </span>
                   <button className="text-gray-400 hover:text-gray-500">
-                    <MoreVertical className="h-5 w-5" />
+                    <Filter className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
               <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5 text-gray-400" />
+                  <Search className="h-5 w-5 text-gray-400" />
                   <span className="text-sm text-gray-500">
                     Last active: {member.lastActive}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Heart className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-gray-400" />
                   <span className="text-sm text-gray-500">
                     {member.medications} medications
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Bell className="h-5 w-5 text-gray-400" />
+                  <Search className="h-5 w-5 text-gray-400" />
                   <span className="text-sm text-gray-500">
                     {member.reminders} reminders
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-gray-400" />
+                  <Filter className="h-5 w-5 text-gray-400" />
                   <span className="text-sm text-gray-500">Caregiver access</span>
                 </div>
               </div>
@@ -222,7 +216,7 @@ const Family: React.FC = () => {
           <ul className="space-y-2">
             <li className="flex items-start">
               <div className="flex-shrink-0">
-                <Heart className="h-5 w-5 text-blue-600 mt-0.5" />
+                <User className="h-5 w-5 text-blue-600 mt-0.5" />
               </div>
               <p className="ml-3 text-sm text-blue-800">
                 Keep track of each family member's medication schedule
@@ -230,7 +224,7 @@ const Family: React.FC = () => {
             </li>
             <li className="flex items-start">
               <div className="flex-shrink-0">
-                <Bell className="h-5 w-5 text-blue-600 mt-0.5" />
+                <Search className="h-5 w-5 text-blue-600 mt-0.5" />
               </div>
               <p className="ml-3 text-sm text-blue-800">
                 Set up reminders for important medication times
@@ -238,7 +232,7 @@ const Family: React.FC = () => {
             </li>
             <li className="flex items-start">
               <div className="flex-shrink-0">
-                <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+                <Filter className="h-5 w-5 text-blue-600 mt-0.5" />
               </div>
               <p className="ml-3 text-sm text-blue-800">
                 Manage access permissions for caregivers and family members
@@ -247,6 +241,12 @@ const Family: React.FC = () => {
           </ul>
         </div>
       </div>
+
+      <AddFamilyMemberModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddFamilyMember}
+      />
     </DashboardLayout>
   );
 };

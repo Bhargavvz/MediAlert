@@ -8,6 +8,8 @@ import {
   QrCode,
   Users,
   Gift,
+  Plus,
+  ChevronRight,
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
@@ -52,31 +54,28 @@ const Dashboard: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {/* Welcome section */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Welcome back, John!</h1>
             <p className="mt-1 text-sm text-gray-500">
               Here's what's happening with your medications today.
             </p>
           </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-            Add Medication
-          </button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => (
             <div
               key={stat.name}
-              className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-500">{stat.name}</h3>
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                     stat.changeType === 'increase'
                       ? 'text-green-800 bg-green-100'
                       : 'text-red-800 bg-red-100'
@@ -85,7 +84,7 @@ const Dashboard: React.FC = () => {
                   {stat.change}
                 </span>
               </div>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">
+              <p className="text-3xl font-semibold text-gray-900">
                 {stat.value}
               </p>
             </div>
@@ -93,41 +92,42 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Quick actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {quickActions.map((action) => (
             <button
               key={action.name}
-              className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200"
+              className="flex flex-col items-center p-6 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200"
             >
               <div
-                className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3`}
+                className={`w-14 h-14 ${action.color} rounded-xl flex items-center justify-center mb-4`}
               >
-                <action.icon className="w-6 h-6 text-white" />
+                <action.icon className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-sm font-medium text-gray-900">{action.name}</h3>
+              <h3 className="text-sm font-medium text-gray-900 text-center">{action.name}</h3>
             </button>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Upcoming reminders */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">
                 Upcoming Reminders
               </h2>
-              <button className="text-sm text-blue-600 hover:text-blue-700">
+              <button className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
                 View all
+                <ChevronRight className="w-4 h-4 ml-1" />
               </button>
             </div>
             <div className="space-y-4">
               {upcomingReminders.map((reminder) => (
                 <div
                   key={reminder.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-2.5 bg-blue-100 rounded-xl">
                       <Pill className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
                     <p className="text-sm font-medium text-gray-900">
                       {reminder.time}
                     </p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                       {reminder.status}
                     </span>
                   </div>
@@ -151,13 +151,14 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Activity feed */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">
                 Recent Activity
               </h2>
-              <button className="text-sm text-blue-600 hover:text-blue-700">
+              <button className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
                 View all
+                <ChevronRight className="w-4 h-4 ml-1" />
               </button>
             </div>
             <div className="flow-root">

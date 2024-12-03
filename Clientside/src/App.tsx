@@ -16,6 +16,9 @@ import Analytics from './pages/dashboard/Analytics';
 import Family from './pages/dashboard/Family';
 import Prescriptions from './pages/dashboard/Prescriptions';
 import Rewards from './pages/dashboard/Rewards';
+import Settings from './pages/dashboard/Settings';
+import Profile from './pages/dashboard/Profile';
+import Donations from './pages/dashboard/Donations';
 
 function App() {
   return (
@@ -34,6 +37,9 @@ function App() {
                 <Route path="/family" element={<Family />} />
                 <Route path="/prescriptions" element={<Prescriptions />} />
                 <Route path="/rewards" element={<Rewards />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/donations" element={<Donations />} />
               </Routes>
             </DashboardLayout>
           }
