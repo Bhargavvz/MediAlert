@@ -45,15 +45,15 @@ export const authService = {
     try {
       console.log('Attempting login with email:', email);
       const response = await api.post('/auth/login', { 
-        email,  
+        email,  // Backend expects 'email' field
         password 
       });
       
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      if (response.data) {
+        console.log('Login successful:', response.data);
+        return response;
       }
-      return response.data;
+      throw new Error('Invalid response from server');
     } catch (error) {
       console.error('Login error:', error);
       throw error;

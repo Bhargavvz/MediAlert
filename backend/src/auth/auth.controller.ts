@@ -1,62 +1,42 @@
-import { Controller, Post, Body, UseGuards, Request, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './local-auth.guard';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() registerDto: any) {
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() registerDto: RegisterDto) {
     try {
-      this.logger.log('Registration attempt with email: ' + registerDto.email);
-      const user = await this.authService.register(registerDto);
-      return {
-        success: true,
-        user,
-        message: 'Registration successful'
-      };
+      return this.authService.register(registerDto);
     } catch (error) {
-      this.logger.error('Registration failed:', error);
-      throw new HttpException({
-        success: false,
-        message: error.message || 'Registration failed. Please try again.',
-        error: error.response || error.message
-      }, error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+      throw error;
     }
   }
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req) {
+  @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() loginDto: LoginDto) {
     try {
-      this.logger.log('Login attempt');
-      
-      if (!req.user) {
-        this.logger.error('Login failed: No user in request');
-        throw new HttpException({
-          success: false,
-          message: 'Invalid credentials',
-          error: 'Authentication failed'
-        }, HttpStatus.UNAUTHORIZED);
-      }
-
-      const result = await this.authService.login(req.user);
-      this.logger.log('Login successful for user: ' + req.user.email);
-      return {
-        success: true,
-        ...result,
-        message: 'Login successful'
-      };
+      return this.authService.login(loginDto);
     } catch (error) {
-      this.logger.error('Login failed:', error);
-      throw new HttpException({
-        success: false,
-        message: error.message || 'Login failed. Please check your credentials.',
-        error: error.response || error.message
-      }, error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+      throw error;
+    }
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  getProfile(@Request() req) {
+    try {
+      return req.user;
+    } catch (error) {
+      throw error;
     }
   }
 }

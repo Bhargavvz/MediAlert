@@ -1,96 +1,134 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async register(registerDto: RegisterDto) {
     try {
-      this.logger.log(`Attempting to validate user with email: ${email}`);
-
-      const user = await this.usersService.findByEmail(email);
-      if (!user) {
-        this.logger.warn(`User not found with email: ${email}`);
-        throw new UnauthorizedException('Invalid email or password');
-      }
-
-      this.logger.log('User found, validating password...');
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      const { email, password, firstName, lastName } = registerDto;
       
-      if (!isPasswordValid) {
-        this.logger.warn('Invalid password provided');
-        throw new UnauthorizedException('Invalid email or password');
-      }
-
-      this.logger.log('Password validation successful');
-      const { password: _, ...result } = user;
-      return result;
-    } catch (error) {
-      this.logger.error(`Authentication error: ${error.message}`, error.stack);
-      throw new UnauthorizedException('Authentication failed');
-    }
-  }
-
-  async login(user: any) {
-    try {
-      this.logger.log(`Generating JWT token for user: ${user.email}`);
-      
-      const payload = { 
-        email: user.email, 
-        sub: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName 
-      };
-
-      const access_token = this.jwtService.sign(payload);
-      this.logger.log('JWT token generated successfully');
-
-      return {
-        access_token,
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
-      };
-    } catch (error) {
-      this.logger.error(`Login error: ${error.message}`, error.stack);
-      throw new UnauthorizedException('Login failed');
-    }
-  }
-
-  async register(userData: any) {
-    try {
-      this.logger.log(`Attempting to register new user with email: ${userData.email}`);
-      
-      // Hash password before creating user
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(userData.password, salt);
-      
-      this.logger.log('Password hashed successfully');
-      
-      const user = await this.usersService.create({
-        ...userData,
-        password: hashedPassword,
+      // Check if user exists
+      const existingUser = await this.userRepository.findOne({ 
+        where: { email: email.toLowerCase() } 
       });
-
-      this.logger.log(`User registered successfully: ${user.email}`);
       
-      // Remove password from response
-      const { password: _, ...result } = user;
-      return result;
+      if (existingUser) {
+        this.logger.warn(`Registration failed: Email ${email} already exists`);
+        throw new ConflictException('Email already registered');
+      }
+
+      // Validate password
+      if (password.length < 6) {
+        throw new BadRequestException('Password must be at least 6 characters long');
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Create new user
+      const user = this.userRepository.create({
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        firstName,
+        lastName,
+      });
+      
+      await this.userRepository.save(user);
+      this.logger.log(`User registered successfully: ${email}`);
+      
+      // Generate token
+      const token = this.generateToken(user);
+      
+      return { 
+        user: this.sanitizeUser(user),
+        token,
+      };
     } catch (error) {
-      this.logger.error(`Registration error: ${error.message}`, error.stack);
+      this.logger.error(`Registration error: ${error.message}`);
       throw error;
     }
+  }
+
+  async login(loginDto: LoginDto) {
+    try {
+      const { email, password } = loginDto;
+      
+      // Find user
+      const user = await this.userRepository.findOne({ 
+        where: { email: email.toLowerCase() } 
+      });
+      
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Update last login
+      user.lastLoginAt = new Date();
+      await this.userRepository.save(user);
+
+      // Generate token
+      const token = this.generateToken(user);
+      
+      this.logger.log(`User logged in successfully: ${email}`);
+      
+      return {
+        user: this.sanitizeUser(user),
+        token,
+      };
+    } catch (error) {
+      this.logger.error(`Login error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async validateUser(email: string, password: string) {
+    const user = await this.userRepository.findOne({ 
+      where: { email: email.toLowerCase() } 
+    });
+    
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    return this.sanitizeUser(user);
+  }
+
+  private generateToken(user: User): string {
+    return this.jwtService.sign({ 
+      id: user.id, 
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+  }
+
+  private sanitizeUser(user: User) {
+    const { password, ...sanitizedUser } = user;
+    return sanitizedUser;
   }
 }

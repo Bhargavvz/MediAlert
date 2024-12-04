@@ -1,8 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Mail, Phone, MapPin } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const Footer = () => {
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('http://localhost:4000/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to subscribe');
+      }
+
+      toast.success('Successfully subscribed to newsletter!');
+      setEmail('');
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to subscribe to newsletter');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -38,21 +71,28 @@ const Footer = () => {
           </div>
           <div>
             <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
-            <form className="space-y-2">
+            <form className="space-y-2" onSubmit={handleSubscribe}>
               <input
                 type="email"
                 placeholder="Enter your email"
                 className="w-full px-3 py-2 bg-gray-800 rounded-md text-white placeholder-gray-400"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
-              <button className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-700 rounded-md">
-                Subscribe
+              <button 
+                type="submit"
+                className="w-full px-3 py-2 bg-primary-600 hover:bg-primary-700 rounded-md disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Subscribing...' : 'Subscribe'}
               </button>
             </form>
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-gray-800 text-center">
           <p className="text-gray-400">
-            © {new Date().getFullYear()} MedTrack. Made with <Heart className="inline-block h-4 w-4 text-red-500" /> for better health.
+            {new Date().getFullYear()} MedTrack. Made with <Heart className="inline-block h-4 w-4 text-red-500" /> for better health.
           </p>
         </div>
       </div>

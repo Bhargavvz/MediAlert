@@ -1,100 +1,126 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/api';
-import { getAuthErrorMessage, handleAuthError } from '../utils/errorHandlers';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { API_URL } from '../config';
+import { login, register } from '../api/auth';
+import { toast } from 'react-hot-toast';
 
 interface User {
-  id: string;
+  id: number;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  name?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  register: (userData: { email: string; password: string; name?: string }) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for stored user data on component mount
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Check for stored token on mount
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      fetchUser();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const clearError = () => setError(null);
-
-  const login = async (email: string, password: string) => {
+  const fetchUser = async () => {
     try {
-      setError(null);
-      setLoading(true);
-      const response = await authService.login(email, password);
-      
-      if (response.success && response.user) {
-        setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
-      } else {
-        throw new Error(response.message || 'Login failed');
-      }
+      const response = await axios.get(`${API_URL}/auth/profile`);
+      setUser(response.data);
     } catch (err) {
-      handleAuthError(err);
-      setError(getAuthErrorMessage(err));
-      throw err;
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (userData: any) => {
+  const handleLogin = useCallback(async (credentials: { email: string; password: string }) => {
     try {
       setError(null);
-      setLoading(true);
-      const response = await authService.register(userData);
-      
-      if (response.success && response.user) {
-        setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
-      } else {
-        throw new Error(response.message || 'Registration failed');
-      }
+      const response = await login(credentials);
+      setUser(response.data.user);
+      setToken(response.data.token);
+      localStorage.setItem('token', response.data.token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      toast.success('Login successful!');
     } catch (err) {
-      handleAuthError(err);
-      setError(getAuthErrorMessage(err));
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      } else {
+        setError('An unexpected error occurred');
+      }
       throw err;
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
-    authService.logout();
+  const handleRegister = useCallback(async (userData: { email: string; password: string; name?: string }) => {
+    try {
+      setError(null);
+      const response = await register(userData);
+      setUser(response.data.user);
+      setToken(response.data.token);
+      localStorage.setItem('token', response.data.token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      toast.success('Registration successful!');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 409) {
+          setError('This email is already registered. Please try logging in instead.');
+        } else {
+          setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
+      throw err;
+    }
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    setToken(null);
+    toast.success('Logged out successfully');
+  }, []);
+
+  const clearError = () => {
     setError(null);
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      error, 
-      login, 
-      register, 
-      logout,
-      clearError 
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        error,
+        login: handleLogin,
+        register: handleRegister,
+        logout: handleLogout,
+        clearError,
+        isAuthenticated: !!token,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -102,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
