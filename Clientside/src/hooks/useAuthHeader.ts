@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 export const useAuthHeader = () => {
   const { user, logout } = useAuth();
@@ -9,8 +10,9 @@ export const useAuthHeader = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
     setIsMenuOpen(false);
+    toast.success('Logged out successfully');
+    navigate('/login');
   };
 
   const toggleMenu = () => {

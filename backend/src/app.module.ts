@@ -26,7 +26,7 @@ import configuration from './config/configuration';
         password: configService.get('database.password'),
         database: configService.get('database.database'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // set to false in production
+        synchronize: false, // Changed to false to prevent auto-sync
         logging: true,
         logger: 'advanced-console',
       }),

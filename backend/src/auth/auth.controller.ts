@@ -20,12 +20,15 @@ export class AuthController {
   }
 
   @Post('login')
-  @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
     try {
-      return this.authService.login(loginDto);
+      console.log('Login attempt for:', loginDto.email);
+      const result = await this.authService.login(loginDto);
+      console.log('Login successful for:', loginDto.email);
+      return result;
     } catch (error) {
+      console.error('Login failed:', error.message);
       throw error;
     }
   }

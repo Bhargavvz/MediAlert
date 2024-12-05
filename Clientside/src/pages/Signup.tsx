@@ -19,17 +19,24 @@ const Signup: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const [firstName, ...lastNameParts] = formData.name.split(' ');
+      const lastName = lastNameParts.join(' ');
+      
       const userData = {
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.name.split(' ')[0] || '',
-        lastName: formData.name.split(' ')[1] || '',
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password.trim(),
+        firstName: firstName || 'User',
+        lastName: lastName || ''
       };
+      
+      console.log('Registering with email:', userData.email);
       await register(userData);
-      toast.success('Registration successful! Please sign in.');
-      navigate('/login');
-    } catch (error) {
-      toast.error('Registration failed. Please try again.');
+      toast.success('Registration successful! Please login to continue.');
+      navigate('/login');  
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

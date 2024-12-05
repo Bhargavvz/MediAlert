@@ -7,7 +7,8 @@ import { toast } from 'react-hot-toast';
 interface User {
   id: number;
   email: string;
-  name?: string;
+  firstName: string;
+  lastName: string;
 }
 
 interface AuthContextType {
@@ -16,7 +17,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (userData: { email: string; password: string; name?: string }) => Promise<void>;
+  register: (userData: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
   logout: () => void;
   clearError: () => void;
   isAuthenticated: boolean;
@@ -31,10 +32,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for stored token on mount
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       fetchUser();
     } else {
       setLoading(false);
@@ -43,11 +43,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}/auth/profile`);
+      const response = await axios.get(`${API_URL}/api/auth/profile`);
       setUser(response.data);
     } catch (err) {
+      console.error('Error fetching user profile:', err);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
+      setUser(null);
+      setToken(null);
     } finally {
       setLoading(false);
     }
@@ -57,70 +60,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setError(null);
       const response = await login(credentials);
-      setUser(response.data.user);
-      setToken(response.data.token);
-      localStorage.setItem('token', response.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-      toast.success('Login successful!');
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
-      } else {
-        setError('An unexpected error occurred');
+      
+      if (!response.user || !response.token) {
+        throw new Error('Invalid response from server');
       }
+
+      setUser(response.user);
+      setToken(response.token);
+      localStorage.setItem('token', response.token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+      
+      toast.success('Login successful! Welcome back.');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
+      setError(message);
+      toast.error(message);
       throw err;
     }
   }, []);
 
-  const handleRegister = useCallback(async (userData: { email: string; password: string; name?: string }) => {
+  const handleRegister = useCallback(async (userData: { email: string; password: string; firstName: string; lastName: string }) => {
     try {
       setError(null);
-      const response = await register(userData);
-      setUser(response.data.user);
-      setToken(response.data.token);
-      localStorage.setItem('token', response.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-      toast.success('Registration successful!');
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 409) {
-          setError('This email is already registered. Please try logging in instead.');
-        } else {
-          setError(err.response?.data?.message || 'Registration failed. Please try again.');
-        }
-      } else {
-        setError('An unexpected error occurred');
-      }
+      await register(userData);
+      toast.success('Registration successful! Please login to continue.');
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      const message = err.response?.data?.message || 'Registration failed. Please try again.';
+      setError(message);
+      toast.error(message);
       throw err;
     }
   }, []);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setToken(null);
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
     toast.success('Logged out successfully');
   }, []);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError(null);
+  }, []);
+
+  const value = {
+    user,
+    token,
+    loading,
+    error,
+    login: handleLogin,
+    register: handleRegister,
+    logout: handleLogout,
+    clearError,
+    isAuthenticated: !!token,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        error,
-        login: handleLogin,
-        register: handleRegister,
-        logout: handleLogout,
-        clearError,
-        isAuthenticated: !!token,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

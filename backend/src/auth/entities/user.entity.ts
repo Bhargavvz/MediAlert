@@ -6,10 +6,13 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, length: 255, transformer: { 
+    to: (value: string) => value.toLowerCase(),
+    from: (value: string) => value
+  }})
   email: string;
 
-  @Column()
+  @Column({ select: false })
   @Exclude()
   password: string;
 
@@ -22,13 +25,13 @@ export class User {
   @Column({ default: false })
   isEmailVerified: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'timestamp' })
   lastLoginAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
   // Helper method to get full name

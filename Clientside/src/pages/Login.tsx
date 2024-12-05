@@ -16,12 +16,19 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with email:', formData.email);  
     setLoading(true);
     try {
-      await login(formData.email, formData.password);
+      await login({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password.trim()
+      });
+      toast.success('Login successful! Welcome to your dashboard.');
       navigate('/dashboard');
-    } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -29,6 +36,7 @@ const Login: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    console.log(`Updating ${name} field`);  
     setFormData(prev => ({
       ...prev,
       [name]: value

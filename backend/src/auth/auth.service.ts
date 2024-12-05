@@ -67,18 +67,23 @@ export class AuthService {
     try {
       const { email, password } = loginDto;
       
+      this.logger.log(`Attempting login for email: ${email}`);
+      
       // Find user
       const user = await this.userRepository.findOne({ 
-        where: { email: email.toLowerCase() } 
+        where: { email: email.toLowerCase() },
+        select: ['id', 'email', 'password', 'firstName', 'lastName', 'isEmailVerified'] // Explicitly select password
       });
       
       if (!user) {
+        this.logger.warn(`Login failed: User not found for email ${email}`);
         throw new UnauthorizedException('Invalid credentials');
       }
 
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
+        this.logger.warn(`Login failed: Invalid password for email ${email}`);
         throw new UnauthorizedException('Invalid credentials');
       }
 
@@ -96,7 +101,7 @@ export class AuthService {
         token,
       };
     } catch (error) {
-      this.logger.error(`Login error: ${error.message}`);
+      this.logger.error(`Login error: ${error.message}`, error.stack);
       throw error;
     }
   }
